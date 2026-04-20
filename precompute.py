@@ -6,20 +6,27 @@
 2. 预计算：precompute_and_save(range_max=13)  # 高难度模式
 3. 加载：load(range_max=10)
 4. 查询：get_solutions([1, 2, 3, 4], range_max=10)
+5. 无解检查：is_unsolvable([1, 2, 3, 4], range_max=10)
+6. 获取有解题：get_solvable_numbers(range_max=10)
 """
 
-from typing import List, Dict
+from typing import List, Dict, Set
 import json
 import os
 
-# 全局预计算缓存
+# 全局缓存
 _PRECOMPUTED_CACHE: Dict[str, List[str]] = {}
+_UNSOLVABLE_CACHE: Set[str] = set()
 _CACHE_LOADED = False
 _CACHE_RANGE = None
+_UNSOLVABLE_LOADED = False
+_UNSOLVABLE_RANGE = None
 
 
-def _get_filename(range_max: int) -> str:
+def _get_filename(range_max: int, unsolvable: bool = False) -> str:
     """根据范围获取文件名"""
+    if unsolvable:
+        return f"unsolvable_{range_max}.txt"
     if range_max == 10:
         return "solutions.json"
     else:
@@ -71,7 +78,43 @@ def precompute_and_save(range_max: int = 10) -> Dict[str, List[str]]:
 
     print(f"预计算完成！共 {len(table)} 种组合，有解 {sum(1 for v in table.values() if v)} 种")
 
+    # 同时生成无解表
+    generate_unsolvable_and_save(range_max, table)
+
     return table
+
+
+def generate_unsolvable_and_save(range_max: int, solutions_table: Dict[str, List[str]] = None) -> Set[str]:
+    """
+    生成并保存无解表
+
+    Args:
+        range_max: 数字范围上限
+        solutions_table: 可选，已有的解法表
+
+    Returns:
+        无解组合集合
+    """
+    filepath = _get_filename(range_max, unsolvable=True)
+
+    if solutions_table is None:
+        # 从解法表导出无解集合
+        filepath_sol = _get_filename(range_max)
+        if os.path.exists(filepath_sol):
+            with open(filepath_sol, 'r') as f:
+                solutions_table = json.load(f)
+
+    unsolvable_set = set()
+    if solutions_table:
+        unsolvable_set = {k for k, v in solutions_table.items() if not v}
+
+    print(f"保存无解表到 {filepath}...")
+    with open(filepath, 'w') as f:
+        for key in sorted(unsolvable_set):
+            f.write(key + '\n')
+
+    print(f"无解表完成！共 {len(unsolvable_set)} 种组合")
+    return unsolvable_set
 
 
 def load(range_max: int = 10) -> Dict[str, List[str]]:
@@ -148,6 +191,75 @@ def get_solution_count(range_max: int = 10) -> int:
     if _CACHE_LOADED and _CACHE_RANGE == range_max:
         return sum(1 for v in _PRECOMPUTED_CACHE.values() if v)
     return 0
+
+
+def load_unsolvable(range_max: int = 10) -> Set[str]:
+    """
+    加载无解组合集合
+
+    Args:
+        range_max: 数字范围上限 (1-N)
+
+    Returns:
+        无解组合集合
+    """
+    global _UNSOLVABLE_CACHE, _UNSOLVABLE_LOADED, _UNSOLVABLE_RANGE
+
+    if _UNSOLVABLE_LOADED and _UNSOLVABLE_RANGE == range_max:
+        return _UNSOLVABLE_CACHE
+
+    filepath = _get_filename(range_max, unsolvable=True)
+
+    if os.path.exists(filepath):
+        print(f"加载无解表 from {filepath}...")
+        with open(filepath, 'r') as f:
+            _UNSOLVABLE_CACHE = set(line.strip() for line in f if line.strip())
+        _UNSOLVABLE_LOADED = True
+        _UNSOLVABLE_RANGE = range_max
+        print(f"加载完成！共 {len(_UNSOLVABLE_CACHE)} 种无解组合")
+    else:
+        print(f"无解表不存在，从解法表生成...")
+        generate_unsolvable_and_save(range_max)
+        _UNSOLVABLE_LOADED = True
+        _UNSOLVABLE_RANGE = range_max
+
+    return _UNSOLVABLE_CACHE
+
+
+def is_unsolvable(numbers: List[int], range_max: int = 10) -> bool:
+    """
+    O(1) 判断组合是否无解
+
+    Args:
+        numbers: 4个数字
+        range_max: 数字范围上限 (1-N)
+
+    Returns:
+        True if 无解, False if 有解
+    """
+    load_unsolvable(range_max)
+    key = _get_key(numbers)
+    return key in _UNSOLVABLE_CACHE
+
+
+def get_solvable_numbers(range_max: int = 10) -> List[List[int]]:
+    """
+    获取所有有解的数字组合（用于随机出题）
+
+    Returns:
+        有解的数字组合列表
+    """
+    global _CACHE_LOADED, _CACHE_RANGE
+
+    if not (_CACHE_LOADED and _CACHE_RANGE == range_max):
+        load(range_max)
+
+    solvable = []
+    for key in _PRECOMPUTED_CACHE:
+        if _PRECOMPUTED_CACHE[key]:  # 有解
+            numbers = [int(x) for x in key.split(',')]
+            solvable.append(numbers)
+    return solvable
 
 
 if __name__ == "__main__":
