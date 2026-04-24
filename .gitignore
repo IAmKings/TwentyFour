@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# CMP / Gradle
+twenty-four-cmp/.gradle/
+twenty-four-cmp/build/
+twenty-four-cmp/.kotlin/
+twenty-four-cmp/composeApp/build/
+
+# CMP local.properties
+twenty-four-cmp/local.properties
+
+# CMP Desktop
+twenty-four-cmp/composeApp/desktop/build/
+twenty-four-cmp/composeApp/.gradle/
+
+# CMP APK/AAB
+*.apk
+*.aab
+
+# Generated files
+*.kt.bak
