@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - master
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - master
-  tag:
-    pattern: 'v*'
 
 env:
   JAVA_VERSION: '17'
