@@ -6,6 +6,7 @@ import data.GameSettings
 import data.HistoryEntry
 import data.HistoryStatus
 import data.HistoryStorage
+import data.SettingsStorage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,25 +47,35 @@ enum class CardState {
 }
 
 class GameViewModel(
-    private val historyStorage: HistoryStorage
+    private val historyStorage: HistoryStorage,
+    private val settingsStorage: SettingsStorage
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
-    private val timerDuration = 60 // seconds
     private val animationDuration = 1500L // milliseconds
+    private val timerDuration = 60 // seconds
 
     init {
         viewModelScope.launch {
+            // 加载历史记录
             val savedHistory = historyStorage.load()
             _uiState.update { it.copy(history = savedHistory) }
+
+            // 加载设置
+            val savedSettings = settingsStorage.load()
+            _uiState.update { it.copy(settings = savedSettings) }
         }
     }
 
     fun updateSettings(settings: GameSettings) {
         _uiState.update { it.copy(settings = settings) }
+        // 持久化设置
+        viewModelScope.launch {
+            settingsStorage.save(settings)
+        }
     }
 
     fun updateExpression(expr: String) {

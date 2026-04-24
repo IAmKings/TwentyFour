@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import data.HistoryStorage
+import data.SettingsStorage
 import game.GameViewModel
 import twentyfour.App
 
@@ -15,7 +16,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             App(
                 gameViewModelFactory = {
-                    GameViewModel(HistoryStorage(this))
+                    GameViewModel(
+                        historyStorage = HistoryStorage(this),
+                        settingsStorage = SettingsStorage(this)
+                    )
                 }
             )
         }

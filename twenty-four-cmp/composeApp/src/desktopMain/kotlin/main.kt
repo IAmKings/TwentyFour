@@ -1,6 +1,7 @@
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import data.HistoryStorage
+import data.SettingsStorage
 import game.GameViewModel
 import twentyfour.App
 
@@ -11,7 +12,10 @@ fun main() = application {
     ) {
         App(
             gameViewModelFactory = {
-                GameViewModel(HistoryStorage())
+                GameViewModel(
+                    historyStorage = HistoryStorage(),
+                    settingsStorage = SettingsStorage()
+                )
             }
         )
     }

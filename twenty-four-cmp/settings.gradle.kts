@@ -1,6 +1,3 @@
-rootProject.name = "twenty-four-cmp"
-include(":composeApp")
-
 pluginManagement {
     repositories {
         google()
@@ -17,3 +14,6 @@ dependencyResolutionManagement {
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 }
+
+rootProject.name = "twenty-four-cmp"
+include(":composeApp")
