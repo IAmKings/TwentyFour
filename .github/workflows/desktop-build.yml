@@ -1,0 +1,144 @@
+name: Desktop Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  JAVA_VERSION: '17'
+
+jobs:
+  # ============ macOS Build ============
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.5'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('twenty-four-cmp/**/*.gradle*', 'twenty-four-cmp/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build macOS App
+        run: |
+          cd twenty-four-cmp
+          ./gradlew :composeApp:compileKotlinDesktop --no-daemon
+          ./gradlew :composeApp:packageMacosApp --no-daemon
+
+      - name: Upload macOS App
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: twenty-four-cmp/composeApp/build/compose/jars/*.dmg
+          retention-days: 7
+
+  # ============ Windows Build ============
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.5'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('twenty-four-cmp/**/*.gradle*', 'twenty-four-cmp/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Windows App
+        run: |
+          cd twenty-four-cmp
+          .\gradlew.bat :composeApp:compileKotlinDesktop --no-daemon
+          .\gradlew.bat :composeApp:packageWindowsApp --no-daemon
+
+      - name: Upload Windows App
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: twenty-four-cmp/composeApp/build/compose/jars/*.exe
+          retention-days: 7
+
+  # ============ Linux Build ============
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.5'
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libayatana-appindicator3-dev
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('twenty-four-cmp/**/*.gradle*', 'twenty-four-cmp/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Linux App
+        run: |
+          cd twenty-four-cmp
+          ./gradlew :composeApp:compileKotlinDesktop --no-daemon
+          ./gradlew :composeApp:packageLinuxApp --no-daemon
+
+      - name: Upload Linux App
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-app
+          path: twenty-four-cmp/composeApp/build/compose/jars/*.deb
+          retention-days: 7
