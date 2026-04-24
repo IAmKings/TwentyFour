@@ -7,19 +7,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -35,10 +40,17 @@ import theme.CardBorder
 import theme.SuitBlack
 import theme.SuitRed
 
+/**
+ * CardFace - 卡片显示正面还是背面
+ */
 enum class CardFace {
     Back, Front
 }
 
+/**
+ * PlayingCard with optional flip animation.
+ * When flipTrigger changes from 0, triggers a 3D flip animation from back to front.
+ */
 @Composable
 fun PlayingCard(
     number: Int,
@@ -49,10 +61,112 @@ fun PlayingCard(
     cardWidth: Dp = 80.dp,
     cardHeight: Dp = 112.dp,
     isCorrect: Boolean = false,
-    isFaded: Boolean = false
+    isFaded: Boolean = false,
+    flipTrigger: Int = 0,  // 触发翻转动画：非0值时触发动画
+    flipDelay: Long = 0L  // 翻转延迟（毫秒），用于顺序翻转
 ) {
     val suitColor = if (isRed) SuitRed else SuitBlack
-    val alpha = if (isFaded) 0.3f else 1f
+
+    // 当 flipTrigger > 0 且目标是正面时，使用翻转动画包装器
+    if (flipTrigger > 0 && face == CardFace.Front) {
+        CardFlipWrapper(
+            cardWidth = cardWidth,
+            cardHeight = cardHeight,
+            isCorrect = isCorrect,
+            number = number,
+            suit = suit,
+            suitColor = suitColor,
+            flipDelay = flipDelay,
+            modifier = modifier
+        )
+    } else {
+        // 无动画直接显示
+        PlayingCardSurface(
+            number = number,
+            suit = suit,
+            isRed = isRed,
+            suitColor = suitColor,
+            face = face,
+            cardWidth = cardWidth,
+            cardHeight = cardHeight,
+            isCorrect = isCorrect,
+            isFaded = isFaded,
+            modifier = modifier
+        )
+    }
+}
+
+/**
+ * 卡片翻转动画包装器
+ * 使用 Animatable 实现 3D 翻转效果
+ * flipDelay: 延迟开始翻转的时间（毫秒），用于顺序翻转效果
+ */
+@Composable
+private fun CardFlipWrapper(
+    cardWidth: Dp,
+    cardHeight: Dp,
+    isCorrect: Boolean,
+    number: Int,
+    suit: String,
+    suitColor: Color,
+    flipDelay: Long = 0L,
+    modifier: Modifier = Modifier
+) {
+    // 初始为背面 (180度)，翻转到正面 (0度)
+    val rotationY = remember { Animatable(180f) }
+
+    LaunchedEffect(Unit) {
+        // 延迟让发牌动画完成 + 顺序翻转延迟
+        kotlinx.coroutines.delay(300L + flipDelay)
+        // 翻转动画: 180 -> 0
+        rotationY.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(
+                durationMillis = 800,
+                easing = FastOutSlowInEasing
+            )
+        )
+    }
+
+    Box(
+        modifier = modifier.graphicsLayer {
+            this.rotationY = rotationY.value
+            cameraDistance = 12f * density
+        }
+    ) {
+        // 旋转角度超过 90 度时显示背面
+        if (rotationY.value > 90f) {
+            CardBackSurface(cardWidth, cardHeight)
+        } else {
+            CardFrontSurface(
+                number = number,
+                suit = suit,
+                suitColor = suitColor,
+                cardWidth = cardWidth,
+                cardHeight = cardHeight,
+                isCorrect = isCorrect
+            )
+        }
+    }
+}
+
+/**
+ * 统一的卡片 Surface 渲染
+ */
+@Composable
+private fun PlayingCardSurface(
+    number: Int,
+    suit: String,
+    isRed: Boolean,
+    suitColor: Color,
+    face: CardFace,
+    cardWidth: Dp,
+    cardHeight: Dp,
+    isCorrect: Boolean,
+    isFaded: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val showBack = face == CardFace.Back
 
     Surface(
         modifier = modifier
@@ -60,19 +174,18 @@ fun PlayingCard(
             .height(cardHeight)
             .clip(RoundedCornerShape(8.dp)),
         shape = RoundedCornerShape(8.dp),
-        color = if (face == CardFace.Back) CardBack else CardBackground,
+        color = if (showBack) CardBack else CardBackground,
         shadowElevation = if (isCorrect) 12.dp else 2.dp,
         tonalElevation = 0.dp
     ) {
         Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp)),
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
-            if (face == CardFace.Back) {
+            if (showBack) {
                 CardBackContent(cardWidth, cardHeight)
             } else {
-                CardFrontContent(
+                CardFrontSurface(
                     number = number,
                     suit = suit,
                     suitColor = suitColor,
@@ -81,6 +194,71 @@ fun PlayingCard(
                     isCorrect = isCorrect
                 )
             }
+        }
+    }
+}
+
+/**
+ * 卡片背面 Surface
+ */
+@Composable
+private fun CardBackSurface(
+    cardWidth: Dp,
+    cardHeight: Dp
+) {
+    Surface(
+        modifier = Modifier
+            .width(cardWidth)
+            .height(cardHeight)
+            .clip(RoundedCornerShape(8.dp)),
+        shape = RoundedCornerShape(8.dp),
+        color = CardBack,
+        shadowElevation = 2.dp,
+        tonalElevation = 0.dp
+    ) {
+        Box(
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            CardBackContent(cardWidth, cardHeight)
+        }
+    }
+}
+
+/**
+ * 卡片正面 Surface
+ */
+@Composable
+private fun CardFrontSurface(
+    number: Int,
+    suit: String,
+    suitColor: Color,
+    cardWidth: Dp,
+    cardHeight: Dp,
+    isCorrect: Boolean
+) {
+    Surface(
+        modifier = Modifier
+            .width(cardWidth)
+            .height(cardHeight)
+            .clip(RoundedCornerShape(8.dp)),
+        shape = RoundedCornerShape(8.dp),
+        color = CardBackground,
+        shadowElevation = if (isCorrect) 12.dp else 2.dp,
+        tonalElevation = 0.dp
+    ) {
+        Box(
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            CardFrontContent(
+                number = number,
+                suit = suit,
+                suitColor = suitColor,
+                cardWidth = cardWidth,
+                cardHeight = cardHeight,
+                isCorrect = isCorrect
+            )
         }
     }
 }
@@ -114,11 +292,10 @@ private fun CardBackContent(cardWidth: Dp, cardHeight: Dp) {
         )
 
         // 对角线图案
-        val patternSize = 4.dp.toPx()
+        val step = 6.dp.toPx()
         val lineWidth = 1.dp.toPx()
 
         // 45度线条
-        val step = 6.dp.toPx()
         for (i in -10..(w / step + h / step).toInt() + 10) {
             val startX = i * step
             val startY = 0f

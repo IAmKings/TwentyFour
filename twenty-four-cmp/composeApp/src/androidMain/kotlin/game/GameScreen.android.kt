@@ -35,6 +35,7 @@ actual fun GameScreen(
 
     GameScreenContent(
         viewModel = viewModel,
+        onNavigateToSettings = onNavigateToSettings,
         modifier = keyboardHandler
     )
 }

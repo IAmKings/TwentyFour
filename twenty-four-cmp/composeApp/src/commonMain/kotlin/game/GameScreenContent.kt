@@ -10,8 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +49,7 @@ import theme.TextMuted
 @Composable
 fun GameScreenContent(
     viewModel: GameViewModel,
+    onNavigateToSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -88,25 +94,48 @@ fun GameScreenContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(spacing.md)
         ) {
-            // Logo
-            Text(
-                text = "24",
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontSize = 48.sp,
-                    color = Accent,
-                    textAlign = TextAlign.Center
-                ),
-                modifier = Modifier.padding(top = spacing.lg)
-            )
-            Text(
-                text = "点 — 心算挑战",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 12.sp,
-                    letterSpacing = 8.sp,
-                    textAlign = TextAlign.Center
-                ),
-                color = TextMuted
-            )
+            // Logo 和设置按钮
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "24",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 48.sp,
+                            color = Accent,
+                            textAlign = TextAlign.Center
+                        ),
+                        modifier = Modifier.padding(top = spacing.lg)
+                    )
+                    Text(
+                        text = "点 — 心算挑战",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 12.sp,
+                            letterSpacing = 8.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        color = TextMuted
+                    )
+                }
+                // 设置按钮 (右上角)
+                IconButton(
+                    onClick = onNavigateToSettings,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = spacing.lg, end = 0.dp)
+                        .size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "设置",
+                        tint = TextMuted.copy(alpha = 0.6f)
+                    )
+                }
+            }
 
             // 计分板
             ScoreBoard(
@@ -131,15 +160,19 @@ fun GameScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 uiState.numbers.forEachIndexed { index, number ->
-                    val cardState = uiState.cardStates.getOrNull(index) ?: CardState.FaceDown
-                    val face = when (cardState) {
+                    val cardStateValue = uiState.cardStates.getOrNull(index) ?: CardState.FaceDown
+                    val face = when (cardStateValue) {
                         CardState.FaceDown -> CardFace.Back
                         CardState.Dealing -> CardFace.Back
                         CardState.FaceUp -> CardFace.Front
                     }
                     val suit = getSuit(index)
                     val isRed = index % 2 == 1 // 交替红黑
-                    val isDealing = cardState == CardState.Dealing
+                    val isDealing = cardStateValue == CardState.Dealing
+                    // flipTrigger 用于触发动画：当卡牌从 Dealing 变为 FaceUp 时值会变化
+                    val flipTrigger = if (cardStateValue == CardState.FaceUp) index + 1 else 0
+                    // 顺序翻转延迟：每张卡片延迟 150ms
+                    val flipDelay = if (cardStateValue == CardState.FaceUp) (index * 150).toLong() else 0L
 
                     components.DealAnimation(
                         index = index,
@@ -153,7 +186,9 @@ fun GameScreenContent(
                             cardWidth = 72.dp,
                             cardHeight = 100.dp,
                             isCorrect = false,
-                            isFaded = false
+                            isFaded = false,
+                            flipTrigger = flipTrigger,
+                            flipDelay = flipDelay
                         )
                     }
                 }

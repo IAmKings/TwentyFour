@@ -9,5 +9,5 @@ actual fun GameScreen(
     viewModel: GameViewModel,
     onNavigateToSettings: () -> Unit
 ) {
-    GameScreenContent(viewModel = viewModel)
+    GameScreenContent(viewModel = viewModel, onNavigateToSettings = onNavigateToSettings)
 }
