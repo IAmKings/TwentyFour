@@ -83,3 +83,38 @@ Initial CMP project with bug fixes and code review
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: 卡牌翻转动画和样式修复
+
+**Date**: 2026-04-24
+**Task**: 卡牌翻转动画和样式修复
+**Branch**: `master`
+
+### Summary
+
+修复卡牌翻转动画、设置入口、GitHub workflow 和扑克牌样式问题
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f0a1664` | (see git log) |
+| `82ee043` | (see git log) |
+| `823033a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
