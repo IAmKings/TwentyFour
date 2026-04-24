@@ -167,7 +167,7 @@ fun GameScreenContent(
                         CardState.FaceUp -> CardFace.Front
                     }
                     val suit = getSuit(index)
-                    val isRed = index % 2 == 1 // 交替红黑
+                    val isRed = isRedSuit(suit)  // 根据实际花色判断红黑
                     val isDealing = cardStateValue == CardState.Dealing
                     // flipTrigger 用于触发动画：当卡牌从 Dealing 变为 FaceUp 时值会变化
                     val flipTrigger = if (cardStateValue == CardState.FaceUp) index + 1 else 0
@@ -235,4 +235,11 @@ fun GameScreenContent(
 private fun getSuit(index: Int): String {
     val suits = listOf("\u2660", "\u2665", "\u2666", "\u2663")
     return suits[index % 4]
+}
+
+/**
+ * 根据花色判断是否为红色（红桃、方块为红色）
+ */
+private fun isRedSuit(suit: String): Boolean {
+    return suit == "\u2665" || suit == "\u2666"  // 红桃 or 方块
 }

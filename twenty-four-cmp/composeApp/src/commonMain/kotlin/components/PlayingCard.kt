@@ -446,15 +446,15 @@ private fun CardFrontContent(
             topLeft = Offset(8.dp.toPx(), 6.dp.toPx() + cornerValSize.size.height + 1.dp.toPx())
         )
 
-        // 右下角（旋转180度）
-        rotate(degrees = 180f, pivot = Offset(w - 8.dp.toPx(), h - 6.dp.toPx())) {
+        // 右下角（180度旋转，使数字和花色倒置）
+        rotate(degrees = 180f, pivot = Offset(w / 2, h / 2)) {
             drawText(
                 textLayoutResult = cornerValSize,
-                topLeft = Offset(0f, 0f)
+                topLeft = Offset(8.dp.toPx(), 6.dp.toPx())
             )
             drawText(
                 textLayoutResult = cornerSuitSize,
-                topLeft = Offset(0f, cornerValSize.size.height + 1.dp.toPx())
+                topLeft = Offset(8.dp.toPx(), 6.dp.toPx() + cornerValSize.size.height + 1.dp.toPx())
             )
         }
 
