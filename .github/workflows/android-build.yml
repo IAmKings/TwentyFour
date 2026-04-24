@@ -32,7 +32,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: '8.5'
+          gradle-version: '8.9'
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
@@ -47,7 +47,7 @@ jobs:
       - name: Create Gradle wrapper
         run: |
           cd twenty-four-cmp
-          gradle wrapper --gradle-version=8.5
+          gradle wrapper --gradle-version=8.9
 
       - name: Build Android Debug APK
         run: |
@@ -80,7 +80,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: '8.5'
+          gradle-version: '8.9'
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
@@ -95,7 +95,7 @@ jobs:
       - name: Create Gradle wrapper
         run: |
           cd twenty-four-cmp
-          gradle wrapper --gradle-version=8.5
+          gradle wrapper --gradle-version=8.9
 
       - name: Build Android Release APK
         run: |
