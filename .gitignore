@@ -22,13 +22,11 @@ twenty-four-cmp/.gradle/
 twenty-four-cmp/build/
 twenty-four-cmp/.kotlin/
 twenty-four-cmp/composeApp/build/
+twenty-four-cmp/composeApp/desktop/build/
+twenty-four-cmp/composeApp/.gradle/
 
 # CMP local.properties
 twenty-four-cmp/local.properties
-
-# CMP Desktop
-twenty-four-cmp/composeApp/desktop/build/
-twenty-four-cmp/composeApp/.gradle/
 
 # CMP APK/AAB
 *.apk
@@ -36,3 +34,11 @@ twenty-four-cmp/composeApp/.gradle/
 
 # Generated files
 *.kt.bak
+
+# AI Agents & Skills (不跟踪)
+.agents/
+.claude/skills/
+skills-lock.json
+
+# Temp files
+code.html
