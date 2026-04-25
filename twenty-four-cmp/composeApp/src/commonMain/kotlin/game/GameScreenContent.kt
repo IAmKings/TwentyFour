@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.fitInside
 import androidx.compose.foundation.layout.WindowInsetsRulers
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
